@@ -6,7 +6,7 @@ from HTMLParser import HTMLParser
 import re
 import urllib2
 import json
-from credentials import CHANNEL_DIANA_TEST_URL, SLACK_CHANNEL_ID
+from credentials import BOT_URL, CHANNEL_DIANA, CHANNEL_WW
 
 class InsightsControllerResponseParser(HTMLParser):
     limit = 5
@@ -20,8 +20,8 @@ class InsightsControllerResponseParser(HTMLParser):
                 title_decoded = urllib2.unquote(m.group(1))
                 title_without_spaces = title_decoded.encode('ISO 8859-1')
                 title = title_without_spaces.replace('_', ' ')
+
                 self.current+=1
-                #<https://wikia.com/wiki/diana|Click me>
                 self.message += '\n\n<' + m.group(0) + '|' + title + '>'
 
     def getMessage(self):
@@ -42,17 +42,17 @@ class WikiaApiController():
         return response
 
 class SlackController(object):
-    def __init__(self, slack_bot_channel = SLACK_CHANNEL_ID):
-        self.slack_bot_channel = slack_bot_channel
+    def __init__(self, bot_channel = CHANNEL_DIANA):
+        self.bot_channel = bot_channel
 
     def post_slack_message(self, message):
         data = {
-            'channel': self.slack_bot_channel,
+            'channel': self.bot_channel,
             'text': message,
         }
 
         payload = json.dumps(data)
-        response = requests.post(CHANNEL_DIANA_TEST_URL,
+        response = requests.post(BOT_URL,
                       data = {
                           'payload': payload,
                       })
@@ -62,7 +62,7 @@ class SlackController(object):
 if __name__ == "__main__":
     parser = InsightsControllerResponseParser()
     api_connector = WikiaApiController()
-    slack_controller = SlackController()
+    slack_controller = SlackController(CHANNEL_WW)
     
     response = api_connector.make_request()
     parser.feed(response)
